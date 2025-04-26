@@ -1,5 +1,5 @@
 const express = require('express');
-const AWS = require('aws-sdk');
+const { MongoClient } = require('mongodb');
 const cors = require('cors');
 
 const app = express();
@@ -8,14 +8,16 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 app.use(cors());
 
-AWS.config.update({
-  region: process.env.AWS_REGION,
-  accessKeyId: process.env.DYNAMODB_ACCESS_KEY_ID,
-  secretAccessKey: process.env.DYNAMODB_SECRET_ACCESS_KEY
-});
+const client = new MongoClient(process.env.MONGODB_ATLAS_QUOTES_URL);
+let quotesCollection;
 
-const dynamoDB = new AWS.DynamoDB.DocumentClient();
-const TABLE_NAME = 'Quotes';
+connectToMongo();
+
+async function connectToMongo() {
+  await client.connect();
+  const database = client.db('Quotes');
+  quotesCollection = database.collection('Quotes');
+}
 
 app.get('/', (_, res) => {
   res.send('test');
@@ -23,13 +25,10 @@ app.get('/', (_, res) => {
 
 app.get('/api/quotes/random', async (_, res) => {
   try {
-    const query = {
-      TableName: TABLE_NAME,
-      Limit: 1
-    };
-    const result = await dynamoDB.scan(query).promise();
-    res.json(result.Items[0]);
+    const result = await quotesCollection.find().limit(1).toArray()[0];
+    res.json(result);
   } catch (error) {
+    console.error('Error fetching quote:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });
