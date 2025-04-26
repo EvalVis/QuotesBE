@@ -25,10 +25,12 @@ app.get('/', (_, res) => {
 
 app.get('/api/quotes/random', async (_, res) => {
   try {
-    const result = await quotesCollection.find().limit(1).toArray()[0];
+    const result = await quotesCollection.aggregate([
+      { $sample: { size: 5 } }
+    ]).toArray();
+    
     res.json(result);
   } catch (error) {
-    console.error('Error fetching quote:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });
