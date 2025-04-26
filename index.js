@@ -17,7 +17,7 @@ const jwtCheck = jwt({
     jwksRequestsPerMinute: 5,
     jwksUri: 'https://dev-wzfkg4o26oz6ndmt.us.auth0.com/.well-known/jwks.json'
   }),
-  audience: 'https://quotesapi.fly.dev',
+  audience: 'quotes.programmersdiary.com',
   issuer: 'https://dev-wzfkg4o26oz6ndmt.us.auth0.com/',
   algorithms: ['RS256']
 });
