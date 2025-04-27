@@ -72,7 +72,7 @@ app.get('/api/quotes/random', jwtCheck, async (req, res) => {
   }
 });
 
-app.post('/api/quotes/save:quoteId', jwtCheck, async (req, res) => {
+app.post('/api/quotes/save/:quoteId', jwtCheck, async (req, res) => {
   try {
     const email = req.auth[`${namespace}email`];
     const { quoteId } = req.params;
