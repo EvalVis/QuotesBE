@@ -138,6 +138,31 @@ app.delete('/api/quotes/forget/:quoteId', jwtCheck, async (req, res) => {
   }
 });
 
+app.post('/api/quotes/addComment/:quoteId', jwtCheck, async (req, res) => {
+  const email = req.auth[`${namespace}email`];
+  const { quoteId } = req.params;
+  const { comment } = req.body;
+  
+  if (!email || !quoteId || !comment) {
+    return res.status(400).json({ message: 'Email, quoteId, and comment are required' });
+  }
+  
+  await quotesCollection.updateOne(
+    { _id: ObjectId.createFromHexString(quoteId) },
+    { 
+      $push: { 
+        comments: {
+          email,
+          text: comment,
+          createdAt: new Date()
+        } 
+      }
+    }
+  );
+  
+  res.status(200).send();
+});
+
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 }); 
