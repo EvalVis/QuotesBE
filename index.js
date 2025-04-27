@@ -63,7 +63,8 @@ app.get('/api/quotes/random', jwtCheck, async (req, res) => {
     
     const result = await quotesCollection.aggregate([
       { $match: { _id: { $nin: excludedQuoteIds } } },
-      { $sample: { size: 5 } }
+      { $sample: { size: 5 } },
+      { $project: { comments: 0 } }
     ]).toArray();
     
     res.json(result);
@@ -109,7 +110,8 @@ app.get('/api/quotes/saved', jwtCheck, async (req, res) => {
     const quoteIds = user.savedQuotes.map(id => ObjectId.createFromHexString(id));
     
     const savedQuotes = await quotesCollection.find(
-      { _id: { $in: quoteIds } }
+      { _id: { $in: quoteIds } },
+      { projection: { comments: 0 } }
     ).toArray();
     
     res.json(savedQuotes);
