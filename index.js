@@ -163,6 +163,30 @@ app.post('/api/quotes/addComment/:quoteId', jwtCheck, async (req, res) => {
   res.status(200).send();
 });
 
+app.get('/api/quotes/comments/:quoteId', jwtCheck, async (req, res) => {
+  const email = req.auth[`${namespace}email`];
+  const { quoteId } = req.params;
+  
+  if (!email || !quoteId) {
+    return res.status(400).json({ message: 'Email and quoteId are required' });
+  }
+  
+  const quote = await quotesCollection.findOne(
+    { _id: ObjectId.createFromHexString(quoteId) },
+    { projection: { comments: 1 } }
+  );
+  
+  if (!quote) {
+    return res.status(404)
+  }
+
+  if (!quote.comments) {
+    return res.json([]);
+  }
+  
+  res.json(quote.comments);
+});
+
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 }); 
