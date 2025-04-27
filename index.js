@@ -72,10 +72,10 @@ app.get('/api/quotes/random', jwtCheck, async (req, res) => {
   }
 });
 
-app.post('/api/quotes/save', jwtCheck, async (req, res) => {
+app.post('/api/quotes/save:quoteId', jwtCheck, async (req, res) => {
   try {
     const email = req.auth[`${namespace}email`];
-    const { quoteId } = req.body;
+    const { quoteId } = req.params;
     
     if (!email || !quoteId) {
       return res.status(400).json({ message: 'Email and quoteId are required' });
