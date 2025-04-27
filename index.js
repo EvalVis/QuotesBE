@@ -167,10 +167,11 @@ app.post('/api/quotes/addComment/:quoteId', jwtCheck, async (req, res) => {
 
 app.get('/api/quotes/comments/:quoteId', jwtCheck, async (req, res) => {
   const email = req.auth[`${namespace}email`];
+  const username = req.auth[`${namespace}username`];
   const { quoteId } = req.params;
   
-  if (!email || !quoteId) {
-    return res.status(400).json({ message: 'Email and quoteId are required' });
+  if (!email || !quoteId  || !username) {
+    return res.status(400).json({ message: 'Email, quoteId and username are required' });
   }
   
   const quote = await quotesCollection.findOne(
@@ -179,14 +180,23 @@ app.get('/api/quotes/comments/:quoteId', jwtCheck, async (req, res) => {
   );
   
   if (!quote) {
-    return res.status(404)
+    return res.status(404).send();
   }
 
   if (!quote.comments) {
     return res.json([]);
   }
   
-  res.json(quote.comments);
+  const comments = quote.comments.map(comment => {
+    return {
+      text: comment.text,
+      username: username,
+      isOwner: comment.email === email,
+      createdAt: comment.createdAt
+    };
+  });
+  
+  res.json(comments);
 });
 
 app.listen(PORT, () => {
