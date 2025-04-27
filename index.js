@@ -118,6 +118,26 @@ app.get('/api/quotes/saved', jwtCheck, async (req, res) => {
   }
 });
 
+app.delete('/api/quotes/forget/:quoteId', jwtCheck, async (req, res) => {
+  try {
+    const email = req.auth[`${namespace}email`];
+    const { quoteId } = req.params;
+    
+    if (!email || !quoteId) {
+      return res.status(400).json({ message: 'Email and quoteId are required' });
+    }
+    
+    await usersCollection.updateOne(
+      { email },
+      { $pull: { savedQuotes: quoteId } }
+    );
+    
+    res.status(200).send();
+  } catch (error) {
+    res.status(500).send();
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 }); 
