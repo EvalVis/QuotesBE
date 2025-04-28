@@ -58,7 +58,7 @@ app.get('/api/quotes/random', jwtCheck, async (req, res) => {
 
     let excludedQuoteIds = [];
     if (user && user.savedQuotes) {
-      excludedQuoteIds = user.savedQuotes.map(id => ObjectId.createFromHexString(id));
+      excludedQuoteIds = user.savedQuotes.map(q => ObjectId.createFromHexString(q.quoteId));
     }
     
     const result = await quotesCollection.aggregate([
@@ -83,8 +83,13 @@ app.post('/api/quotes/save/:quoteId', jwtCheck, async (req, res) => {
     }
     
     await usersCollection.updateOne(
-      { email },
-      { $addToSet: { savedQuotes: quoteId } },
+      {
+        email,
+        savedQuotes: { $not: { $elemMatch: { quoteId: quoteId } } }
+      },
+      {
+        $push: { savedQuotes: { quoteId, dateSaved: new Date() } }
+      },
       { upsert: true }
     );
     
@@ -107,14 +112,20 @@ app.get('/api/quotes/saved', jwtCheck, async (req, res) => {
       return res.json([]);
     }
     
-    const quoteIds = user.savedQuotes.map(id => ObjectId.createFromHexString(id));
-    
-    const savedQuotes = await quotesCollection.find(
+    const sortedSavedQuotes = [...user.savedQuotes].sort((a, b) => new Date(b.dateSaved) - new Date(a.dateSaved));
+
+    const quoteIds = sortedSavedQuotes.map(q => ObjectId.createFromHexString(q.quoteId));
+    const quotes = await quotesCollection.find(
       { _id: { $in: quoteIds } },
       { projection: { comments: 0 } }
     ).toArray();
+
+    const quotesMap = new Map(quotes.map(q => [q._id.toString(), q]));
+    const result = sortedSavedQuotes.map(sq => {
+      return { ...quotesMap.get(sq.quoteId), dateSaved: sq.dateSaved };
+    });
     
-    res.json(savedQuotes);
+    res.json(result);
   } catch (error) {
     res.status(500).send();
   }
@@ -131,7 +142,7 @@ app.delete('/api/quotes/forget/:quoteId', jwtCheck, async (req, res) => {
     
     await usersCollection.updateOne(
       { email },
-      { $pull: { savedQuotes: quoteId } }
+      { $pull: { savedQuotes: { quoteId } } }
     );
     
     res.status(200).send();
