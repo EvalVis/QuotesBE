@@ -111,17 +111,15 @@ app.get('/api/quotes/saved', jwtCheck, async (req, res) => {
     if (!user || !user.savedQuotes) {
       return res.json([]);
     }
-    
-    const sortedSavedQuotes = [...user.savedQuotes].sort((a, b) => new Date(b.dateSaved) - new Date(a.dateSaved));
 
-    const quoteIds = sortedSavedQuotes.map(q => ObjectId.createFromHexString(q.quoteId));
+    const quoteIds = user.savedQuotes.map(q => ObjectId.createFromHexString(q.quoteId));
     const quotes = await quotesCollection.find(
       { _id: { $in: quoteIds } },
       { projection: { comments: 0 } }
     ).toArray();
 
     const quotesMap = new Map(quotes.map(q => [q._id.toString(), q]));
-    const result = sortedSavedQuotes.map(sq => {
+    const result = user.savedQuotes.map(sq => {
       return { ...quotesMap.get(sq.quoteId), dateSaved: sq.dateSaved };
     });
     
