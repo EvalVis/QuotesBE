@@ -50,11 +50,11 @@ app.use((err, _, res, next) => {
 
 app.get('/api/quotes/random', jwtCheck, async (req, res) => {
   try {
-    const email = req.auth[`${namespace}email`];
-    if (!email) {
-      return res.status(400).json({ message: 'Email is required' });
+    const sub = req.auth.sub;
+    if (!sub) {
+      return res.status(400).json({ message: 'User ID is required' });
     }
-    const user = await usersCollection.findOne({ email });
+    const user = await usersCollection.findOne({ sub });
 
     let excludedQuoteIds = [];
     if (user && user.savedQuotes) {
@@ -75,16 +75,16 @@ app.get('/api/quotes/random', jwtCheck, async (req, res) => {
 
 app.post('/api/quotes/save/:quoteId', jwtCheck, async (req, res) => {
   try {
-    const email = req.auth[`${namespace}email`];
+    const sub = req.auth.sub;
     const { quoteId } = req.params;
     
-    if (!email || !quoteId) {
-      return res.status(400).json({ message: 'Email and quoteId are required' });
+    if (!sub || !quoteId) {
+      return res.status(400).json({ message: 'User ID and quoteId are required' });
     }
     
     await usersCollection.updateOne(
       {
-        email,
+        sub,
         savedQuotes: { $not: { $elemMatch: { quoteId: quoteId } } }
       },
       {
@@ -101,12 +101,12 @@ app.post('/api/quotes/save/:quoteId', jwtCheck, async (req, res) => {
 
 app.get('/api/quotes/saved', jwtCheck, async (req, res) => {
   try {
-    const email = req.auth[`${namespace}email`];
-    if (!email) {
-      return res.status(400).json({ message: 'Email is required' });
+    const sub = req.auth.sub;
+    if (!sub) {
+      return res.status(400).json({ message: 'User ID is required' });
     }
     
-    const user = await usersCollection.findOne({ email });
+    const user = await usersCollection.findOne({ sub });
     
     if (!user || !user.savedQuotes) {
       return res.json([]);
@@ -131,15 +131,15 @@ app.get('/api/quotes/saved', jwtCheck, async (req, res) => {
 
 app.delete('/api/quotes/forget/:quoteId', jwtCheck, async (req, res) => {
   try {
-    const email = req.auth[`${namespace}email`];
+    const sub = req.auth.sub;
     const { quoteId } = req.params;
     
-    if (!email || !quoteId) {
-      return res.status(400).json({ message: 'Email and quoteId are required' });
+    if (!sub || !quoteId) {
+      return res.status(400).json({ message: 'User ID and quoteId are required' });
     }
     
     await usersCollection.updateOne(
-      { email },
+      { sub },
       { $pull: { savedQuotes: { quoteId } } }
     );
     
@@ -150,12 +150,12 @@ app.delete('/api/quotes/forget/:quoteId', jwtCheck, async (req, res) => {
 });
 
 app.post('/api/quotes/addComment/:quoteId', jwtCheck, async (req, res) => {
-  const email = req.auth[`${namespace}email`];
+  const sub = req.auth.sub;
   const { quoteId } = req.params;
   const { comment } = req.body;
   
-  if (!email || !quoteId || !comment) {
-    return res.status(400).json({ message: 'Email, quoteId, and comment are required' });
+  if (!sub || !quoteId || !comment) {
+    return res.status(400).json({ message: 'User ID, quoteId, and comment are required' });
   }
   
   await quotesCollection.updateOne(
@@ -163,7 +163,7 @@ app.post('/api/quotes/addComment/:quoteId', jwtCheck, async (req, res) => {
     { 
       $push: { 
         comments: {
-          email,
+          sub,
           text: comment,
           createdAt: new Date()
         } 
@@ -175,12 +175,12 @@ app.post('/api/quotes/addComment/:quoteId', jwtCheck, async (req, res) => {
 });
 
 app.get('/api/quotes/comments/:quoteId', jwtCheck, async (req, res) => {
-  const email = req.auth[`${namespace}email`];
+  const sub = req.auth.sub;
   const username = req.auth[`${namespace}username`];
   const { quoteId } = req.params;
   
-  if (!email || !quoteId  || !username) {
-    return res.status(400).json({ message: 'Email, quoteId and username are required' });
+  if (!sub || !quoteId || !username) {
+    return res.status(400).json({ message: 'User ID, quoteId and username are required' });
   }
   
   const quote = await quotesCollection.findOne(
@@ -200,7 +200,7 @@ app.get('/api/quotes/comments/:quoteId', jwtCheck, async (req, res) => {
     return {
       text: comment.text,
       username: username,
-      isOwner: comment.email === email,
+      isOwner: comment.sub === sub,
       createdAt: comment.createdAt
     };
   });
