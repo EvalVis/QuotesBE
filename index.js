@@ -10,7 +10,7 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 app.use(cors());
 
-const namespace = 'https://quotes.programmersdiary.com/';
+const customClaimsNamespace = process.env.jwt_customClaimsNamespace;
 
 const optionalJwtCheck = (req, res, next) => {
   const auth = req.headers.authorization;
@@ -22,14 +22,14 @@ const optionalJwtCheck = (req, res, next) => {
 
 const jwtCheck = jwt({
   secret: jwksRsa.expressJwtSecret({
-    cache: true,
-    rateLimit: true,
-    jwksRequestsPerMinute: 5,
-    jwksUri: 'https://dev-wzfkg4o26oz6ndmt.us.auth0.com/.well-known/jwks.json'
+    cache: process.env.jwt_cache || true,
+    rateLimit: process.env.jwt_rateLimit || true,
+    jwksRequestsPerMinute: process.env.jwt_jwksRequestsPerMinute || 5,
+    jwksUri: process.env.jwt_jwksUri
   }),
-  audience: 'quotes.programmersdiary.com',
-  issuer: 'https://dev-wzfkg4o26oz6ndmt.us.auth0.com/',
-  algorithms: ['RS256']
+  audience: process.env.jwt_audience,
+  issuer: process.env.jwt_issuer,
+  algorithms: process.env.jwt_algorithms ? process.env.jwt_algorithms.split(',') : ['RS256']
 });
 
 const client = new MongoClient(process.env.MONGODB_ATLAS_QUOTES_URL);
@@ -40,9 +40,9 @@ connectToMongo();
 
 async function connectToMongo() {
   await client.connect();
-  const database = client.db('Quotes');
-  quotesCollection = database.collection('Quotes');
-  usersCollection = database.collection('Users');
+  const database = client.db(process.env.db_name);
+  quotesCollection = database.collection(process.env.db_quotesCollectionName);
+  usersCollection = database.collection(process.usersCollectionName);
 }
 
 app.use((err, _, res, next) => {
@@ -65,7 +65,7 @@ app.get('/api/quotes/random', optionalJwtCheck, async (req, res) => {
   
   const result = await quotesCollection.aggregate([
     { $match: { _id: { $nin: excludedQuoteIds } } },
-    { $sample: { size: 5 } },
+    { $sample: { size: process.env.quotes_randomFetchSize || 5 } },
     { $project: { comments: 0 } }
   ]).toArray();
   
@@ -150,7 +150,7 @@ app.delete('/api/quotes/forget/:quoteId', jwtCheck, async (req, res) => {
 
 app.post('/api/quotes/addComment/:quoteId', jwtCheck, async (req, res) => {
   const sub = req.auth.sub;
-  const username = req.auth[`${namespace}username`];
+  const username = req.auth[`${customClaimsNamespace}username`];
   const { quoteId } = req.params;
   const { comment } = req.body;
   
