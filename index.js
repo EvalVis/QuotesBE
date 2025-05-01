@@ -12,6 +12,14 @@ app.use(cors());
 
 const namespace = 'https://quotes.programmersdiary.com/';
 
+const optionalJwtCheck = (req, res, next) => {
+  const auth = req.headers.authorization;
+  if (!auth) {
+    return next();
+  }
+  jwtCheck(req, res, next);
+}
+
 const jwtCheck = jwt({
   secret: jwksRsa.expressJwtSecret({
     cache: true,
@@ -44,19 +52,12 @@ app.use((err, _, res, next) => {
   next(err);
 });
 
-app.get('/api/quotes/random', jwtCheck, async (req, res) => {
-  try {
-    const sub = req.auth.sub;
-    if (!sub) {
-      return res.status(400).json({ message: 'User ID is required' });
-    }
-    const user = await usersCollection.findOne({ sub });
+app.get('/api/quotes/random', optionalJwtCheck, async (req, res) => {
+  const sub = req.auth?.sub;
 
-    let excludedQuoteIds = [];
     if (user && user.savedQuotes) {
       excludedQuoteIds = user.savedQuotes.map(q => ObjectId.createFromHexString(q.quoteId));
     }
-    
     const result = await quotesCollection.aggregate([
       { $match: { _id: { $nin: excludedQuoteIds } } },
       { $sample: { size: 5 } },
@@ -67,6 +68,7 @@ app.get('/api/quotes/random', jwtCheck, async (req, res) => {
   } catch (error) {
     res.status(500).send();
   }
+  
 });
 
 app.post('/api/quotes/save/:quoteId', jwtCheck, async (req, res) => {
