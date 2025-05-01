@@ -42,7 +42,7 @@ async function connectToMongo() {
   await client.connect();
   const database = client.db(process.env.db_name);
   quotesCollection = database.collection(process.env.db_quotesCollectionName);
-  usersCollection = database.collection(process.usersCollectionName);
+  usersCollection = database.collection(process.env.usersCollectionName);
 }
 
 app.use((err, _, res, next) => {
