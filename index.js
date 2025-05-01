@@ -53,23 +53,27 @@ app.use((err, _, res, next) => {
 });
 
 app.get('/api/quotes/random', optionalJwtCheck, async (req, res) => {
-  const sub = req.auth?.sub;
+  try {
+    const sub = req.auth?.sub;
 
-  let excludedQuoteIds = [];
-  if (sub) {
-    const user = await usersCollection.findOne({ sub });
-    if (user && user.savedQuotes) {
-      excludedQuoteIds = user.savedQuotes.map(q => ObjectId.createFromHexString(q.quoteId));
+    let excludedQuoteIds = [];
+    if (sub) {
+      const user = await usersCollection.findOne({ sub });
+      if (user && user.savedQuotes) {
+        excludedQuoteIds = user.savedQuotes.map(q => ObjectId.createFromHexString(q.quoteId));
+      }
     }
+    
+    const result = await quotesCollection.aggregate([
+      { $match: { _id: { $nin: excludedQuoteIds } } },
+      { $sample: { size: process.env.quotes_randomFetchSize || 5 } },
+      { $project: { comments: 0 } }
+    ]).toArray();
+    
+    res.json(result);
+  } catch (error) {
+    res.status(500).send();
   }
-  
-  const result = await quotesCollection.aggregate([
-    { $match: { _id: { $nin: excludedQuoteIds } } },
-    { $sample: { size: process.env.quotes_randomFetchSize || 5 } },
-    { $project: { comments: 0 } }
-  ]).toArray();
-  
-  res.json(result);
 });
 
 app.post('/api/quotes/save/:quoteId', jwtCheck, async (req, res) => {
@@ -149,64 +153,72 @@ app.delete('/api/quotes/forget/:quoteId', jwtCheck, async (req, res) => {
 });
 
 app.post('/api/quotes/addComment/:quoteId', jwtCheck, async (req, res) => {
-  const sub = req.auth.sub;
-  const username = req.auth[`${customClaimsNamespace}username`];
-  const { quoteId } = req.params;
-  const { comment } = req.body;
-  
-  if (!sub || !username || !quoteId || !comment) {
-    return res.status(400).json({ message: 'User ID, username, quoteId, and comment are required' });
-  }
-  
-  await quotesCollection.updateOne(
-    { _id: ObjectId.createFromHexString(quoteId) },
-    { 
-      $push: { 
-        comments: {
-          _id: new ObjectId(),
-          sub,
-          username,
-          text: comment,
-          createdAt: new Date()
-        } 
-      }
+  try {
+    const sub = req.auth.sub;
+    const username = req.auth[`${customClaimsNamespace}username`];
+    const { quoteId } = req.params;
+    const { comment } = req.body;
+    
+    if (!sub || !username || !quoteId || !comment) {
+      return res.status(400).json({ message: 'User ID, username, quoteId, and comment are required' });
     }
-  );
-  
-  res.status(200).send();
+    
+    await quotesCollection.updateOne(
+      { _id: ObjectId.createFromHexString(quoteId) },
+      { 
+        $push: { 
+          comments: {
+            _id: new ObjectId(),
+            sub,
+            username,
+            text: comment,
+            createdAt: new Date()
+          } 
+        }
+      }
+    );
+    
+    res.status(200).send();
+  } catch (error) {
+    res.status(500).send();
+  }
 });
 
 app.get('/api/quotes/comments/:quoteId', optionalJwtCheck, async (req, res) => {
-  const sub = req.auth?.sub;
-  const { quoteId } = req.params;
-  
-  if (!quoteId) {
-    return res.status(400).json({ message: 'quoteId is required' });
-  }
-  
-  const quote = await quotesCollection.findOne(
-    { _id: ObjectId.createFromHexString(quoteId) },
-    { projection: { comments: 1 } }
-  );
-  
-  if (!quote) {
-    return res.status(404).send();
-  }
+  try {
+    const sub = req.auth?.sub;
+    const { quoteId } = req.params;
+    
+    if (!quoteId) {
+      return res.status(400).json({ message: 'quoteId is required' });
+    }
+    
+    const quote = await quotesCollection.findOne(
+      { _id: ObjectId.createFromHexString(quoteId) },
+      { projection: { comments: 1 } }
+    );
+    
+    if (!quote) {
+      return res.status(404).send();
+    }
 
-  if (!quote.comments) {
-    return res.json([]);
+    if (!quote.comments) {
+      return res.json([]);
+    }
+    
+    const comments = quote.comments.map(comment => {
+      return {
+        text: comment.text,
+        username: comment.username,
+        isOwner: comment.sub === sub,
+        createdAt: comment.createdAt
+      };
+    });
+    
+    res.json(comments);
+  } catch (error) {
+    res.status(500).send();
   }
-  
-  const comments = quote.comments.map(comment => {
-    return {
-      text: comment.text,
-      username: comment.username,
-      isOwner: comment.sub === sub,
-      createdAt: comment.createdAt
-    };
-  });
-  
-  res.json(comments);
 });
 
 app.listen(PORT, () => {
