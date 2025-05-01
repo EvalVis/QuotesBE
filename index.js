@@ -55,20 +55,21 @@ app.use((err, _, res, next) => {
 app.get('/api/quotes/random', optionalJwtCheck, async (req, res) => {
   const sub = req.auth?.sub;
 
+  let excludedQuoteIds = [];
+  if (sub) {
+    const user = await usersCollection.findOne({ sub });
     if (user && user.savedQuotes) {
       excludedQuoteIds = user.savedQuotes.map(q => ObjectId.createFromHexString(q.quoteId));
     }
-    const result = await quotesCollection.aggregate([
-      { $match: { _id: { $nin: excludedQuoteIds } } },
-      { $sample: { size: 5 } },
-      { $project: { comments: 0 } }
-    ]).toArray();
-    
-    res.json(result);
-  } catch (error) {
-    res.status(500).send();
   }
   
+  const result = await quotesCollection.aggregate([
+    { $match: { _id: { $nin: excludedQuoteIds } } },
+    { $sample: { size: 5 } },
+    { $project: { comments: 0 } }
+  ]).toArray();
+  
+  res.json(result);
 });
 
 app.post('/api/quotes/save/:quoteId', jwtCheck, async (req, res) => {
