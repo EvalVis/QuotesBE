@@ -175,13 +175,12 @@ app.post('/api/quotes/addComment/:quoteId', jwtCheck, async (req, res) => {
   res.status(200).send();
 });
 
-app.get('/api/quotes/comments/:quoteId', jwtCheck, async (req, res) => {
-  const sub = req.auth.sub;
-  const username = req.auth[`${namespace}username`];
+app.get('/api/quotes/comments/:quoteId', optionalJwtCheck, async (req, res) => {
+  const sub = req.auth?.sub;
   const { quoteId } = req.params;
   
-  if (!sub || !quoteId || !username) {
-    return res.status(400).json({ message: 'User ID, quoteId and username are required' });
+  if (!quoteId) {
+    return res.status(400).json({ message: 'quoteId is required' });
   }
   
   const quote = await quotesCollection.findOne(
