@@ -66,7 +66,7 @@ app.get('/api/quotes/random', optionalJwtCheck, async (req, res) => {
     
     const result = await quotesCollection.aggregate([
       { $match: { _id: { $nin: excludedQuoteIds } } },
-      { $sample: { size: process.env.quotes_randomFetchSize || 5 } },
+      { $sample: { size: parseInt(process.env.quotes_randomFetchSize, 10) || 5 } },
       { $project: { comments: 0 } }
     ]).toArray();
     

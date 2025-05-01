@@ -41,7 +41,7 @@ ENV jwt_customClaimsNamespace="https://quotes.programmersdiary.com/"
 ENV db_name="Quotes"
 ENV db_quotesCollectionName="Quotes"
 ENV db_usersCollectionName="Users"
-ENV quotes_randomFetchSize="5"
+ENV quotes_randomFetchSize=5
 
 # Start the server by default, this can be overwritten at runtime
 EXPOSE 3000
