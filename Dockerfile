@@ -34,6 +34,15 @@ FROM base
 # Copy built application
 COPY --from=build /app /app
 
+ENV jwt_jwksUri="https://dev-wzfkg4o26oz6ndmt.us.auth0.com/.well-known/jwks.json"
+ENV jwt_audience="quotes.programmersdiary.com"
+ENV jwt_issuer="https://dev-wzfkg4o26oz6ndmt.us.auth0.com/"
+ENV jwt_customClaimsNamespace="https://quotes.programmersdiary.com/"
+ENV db_name="Quotes"
+ENV db_quotesCollectionName="Quotes"
+ENV db_usersCollectionName="Users"
+ENV quotes_randomFetchSize="5"
+
 # Start the server by default, this can be overwritten at runtime
 EXPOSE 3000
 CMD [ "node", "index.js" ]
