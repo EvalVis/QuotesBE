@@ -37,10 +37,6 @@ async function connectToMongo() {
   usersCollection = database.collection('Users');
 }
 
-app.get('/', (_, res) => {
-  res.send('test');
-});
-
 app.use((err, _, res, next) => {
   if (err.name === 'UnauthorizedError') {
     return res.status(401).json({ message: 'Unauthorized.' });
