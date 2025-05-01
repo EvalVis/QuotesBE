@@ -163,6 +163,7 @@ app.post('/api/quotes/addComment/:quoteId', jwtCheck, async (req, res) => {
     { 
       $push: { 
         comments: {
+          _id: new ObjectId(),
           sub,
           username,
           text: comment,
