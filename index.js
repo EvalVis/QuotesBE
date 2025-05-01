@@ -151,11 +151,12 @@ app.delete('/api/quotes/forget/:quoteId', jwtCheck, async (req, res) => {
 
 app.post('/api/quotes/addComment/:quoteId', jwtCheck, async (req, res) => {
   const sub = req.auth.sub;
+  const username = req.auth[`${namespace}username`];
   const { quoteId } = req.params;
   const { comment } = req.body;
   
-  if (!sub || !quoteId || !comment) {
-    return res.status(400).json({ message: 'User ID, quoteId, and comment are required' });
+  if (!sub || !username || !quoteId || !comment) {
+    return res.status(400).json({ message: 'User ID, username, quoteId, and comment are required' });
   }
   
   await quotesCollection.updateOne(
@@ -164,6 +165,7 @@ app.post('/api/quotes/addComment/:quoteId', jwtCheck, async (req, res) => {
       $push: { 
         comments: {
           sub,
+          username,
           text: comment,
           createdAt: new Date()
         } 
@@ -199,7 +201,7 @@ app.get('/api/quotes/comments/:quoteId', jwtCheck, async (req, res) => {
   const comments = quote.comments.map(comment => {
     return {
       text: comment.text,
-      username: username,
+      username: comment.username,
       isOwner: comment.sub === sub,
       createdAt: comment.createdAt
     };
