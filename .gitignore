@@ -17,3 +17,5 @@ benchmarks/graphs
 
 Dockerfile
 fly.toml
+
+dist/
