@@ -17,7 +17,8 @@ export const optionalJwtCheck = jest.fn((req: express.Request, _: express.Respon
   if (!auth) {
     return next();
   }
-  req.auth = { sub: auth.split(' ')[1] };
+  const token = auth.split(' ')[1];
+  req.auth = { sub: token.split(";")[0], [`${process.env.jwt_customClaimsNamespace}username`]: token.split(";")[1] };
   next();
 });
 

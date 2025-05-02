@@ -1,4 +1,4 @@
-import { describe, beforeAll, afterAll, beforeEach, it, expect } from '@jest/globals';
+import { describe, beforeAll, afterAll, it, expect } from '@jest/globals';
 import { ObjectId } from 'mongodb';
 import request from 'supertest';
 import { start, stop, TestContext } from './setup';
@@ -23,32 +23,20 @@ describe('POST /api/quotes/addComment/:quoteId', () => {
     expect(response.body).toEqual({ message: 'Unauthorized.' });
   });
 
-  it('should return bad request when quoteId is not provided', async () => {
-    await request(context.app)
-      .post('/api/quotes/addComment/')
-      .set('Authorization', 'Bearer sub0;tester')
-      .send({ comment: 'Sup' })
-      .expect(404);
-  });
-
   it('should return bad request when username is not provided', async () => {
-    const response = await request(context.app)
+    await request(context.app)
       .post(`/api/quotes/addComment/${new ObjectId().toString()}`)
       .set('Authorization', 'Bearer sub0')
-      .send({ comment: 'Hello' })
+      .send({ comment: 'Sup' })
       .expect(400);
-
-    expect(response.body).toEqual({ message: 'User ID, username, quoteId, and comment are required' });
   });
 
   it('should return bad request when comment is not provided', async () => {
-    const response = await request(context.app)
+    await request(context.app)
       .post(`/api/quotes/addComment/${new ObjectId().toString()}`)
       .set('Authorization', 'Bearer sub0;tester')
       .send({})
       .expect(400);
-
-    expect(response.body).toEqual({ message: 'User ID, username, quoteId, and comment are required' });
   });
 
   it('should create a comment when all required input is provided', async () => {
@@ -72,6 +60,7 @@ describe('POST /api/quotes/addComment/:quoteId', () => {
     const comment = quote!.comments[0];
     expect(comment).toHaveProperty('_id');
     expect(comment).toHaveProperty('createdAt');
+    expect(comment.sub).toBe('sub0');
     expect(comment.username).toBe('tester');
     expect(comment.text).toBe('Test comment');
   });

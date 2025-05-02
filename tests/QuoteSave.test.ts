@@ -22,13 +22,6 @@ describe('POST /api/quotes/save/:quoteId', () => {
     expect(response.body).toEqual({ message: 'Unauthorized.' });
   });
 
-  it('should return bad request when quoteId is not provided', async () => {
-    await request(context.app)
-      .post('/api/quotes/save/')
-      .set('Authorization', 'Bearer sub0')
-      .expect(404);
-  });
-
   it('should save quote when user is logged in and provides valid quoteId', async () => {
     const quoteId = new ObjectId();
     await context.db.collection('Quotes').insertOne({

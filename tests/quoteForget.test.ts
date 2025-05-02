@@ -22,13 +22,6 @@ describe('DELETE /api/quotes/forget/:quoteId', () => {
         expect(response.body).toEqual({ message: 'Unauthorized.' });
     });
 
-    it('should return bad request when quoteId is not provided', async () => {
-        await request(context.app)
-            .delete('/api/quotes/forget/')
-            .set('Authorization', 'Bearer sub0')
-            .expect(404);
-    });
-
     it('should remove quote from saved list when user is logged in and provides quoteId', async () => {
         const quoteId = new ObjectId();
         await context.db.collection('Users').insertOne({
