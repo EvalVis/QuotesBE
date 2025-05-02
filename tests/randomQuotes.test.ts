@@ -1,28 +1,16 @@
 import { start, stop } from './fakes/fakeDb';
 import { Db, ObjectId } from 'mongodb';
-import { describe, beforeAll, afterAll, beforeEach, it, expect, jest } from '@jest/globals';
+import { describe, beforeAll, afterAll, beforeEach, it, expect } from '@jest/globals';
 import express from 'express';
 import request from 'supertest';
 import { createApi } from '../src/api';
-import { optionalJwtCheck, jwtCheck } from './fakes/fakeJwt';
-
-jest.mock('../src/jwt');
-
-jest.mocked(require('../src/jwt')).optionalJwtCheck = optionalJwtCheck;
-jest.mocked(require('../src/jwt')).jwtCheck = jwtCheck;
 
 describe('API tests', () => {
   let db: Db;
   let app: express.Application;
   let server: any;
-  let savedQuoteId: ObjectId;
 
   beforeAll(async () => {
-    process.env.quotes_randomFetchSize = '3';
-    process.env.db_name = 'Quotes';
-    process.env.db_quotesCollectionName = 'Quotes';
-    process.env.db_usersCollectionName = 'Users';
-
     db = await start();
     app = express();
     app.use(express.json());

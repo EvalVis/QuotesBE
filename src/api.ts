@@ -23,9 +23,7 @@ export function createApi({ mongoDb, app }: { mongoDb: Db, app: express.Applicat
         if (sub) {
             const user = await usersCollection.findOne({ sub });
             if (user && user.savedQuotes) {
-                console.log("HERE");
                 excludedQuoteIds = user.savedQuotes.map((q: any) => ObjectId.createFromHexString(q.quoteId));
-                console.log("THERE");
             }
         }
         

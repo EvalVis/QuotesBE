@@ -1,15 +1,9 @@
 import { start, stop } from './fakes/fakeDb';
 import { Db, ObjectId } from 'mongodb';
-import { describe, beforeAll, afterAll, beforeEach, it, expect, jest } from '@jest/globals';
+import { describe, beforeAll, afterAll, beforeEach, it, expect } from '@jest/globals';
 import express from 'express';
 import request from 'supertest';
 import { createApi } from '../src/api';
-import { optionalJwtCheck, jwtCheck } from './fakes/fakeJwt';
-
-jest.mock('../src/jwt');
-
-jest.mocked(require('../src/jwt')).optionalJwtCheck = optionalJwtCheck;
-jest.mocked(require('../src/jwt')).jwtCheck = jwtCheck;
 
 describe('API tests', () => {
   let db: Db;
@@ -17,11 +11,6 @@ describe('API tests', () => {
   let server: any;
 
   beforeAll(async () => {
-    process.env.quotes_randomFetchSize = '3';
-    process.env.db_name = 'Quotes';
-    process.env.db_quotesCollectionName = 'Quotes';
-    process.env.db_usersCollectionName = 'Users';
-
     db = await start();
     app = express();
     app.use(express.json());
@@ -59,12 +48,12 @@ describe('API tests', () => {
       const quoteId = new ObjectId();
       await db.collection('Quotes').insertOne({
         _id: quoteId,
-        quote: 'Test Quote',
-        author: 'Test Author',
-        tags: ['test']
+        quote: 'A',
+        author: 'B',
+        tags: ['C', 'D']
       });
 
-      const response = await request(app)
+      await request(app)
         .post(`/api/quotes/save/${quoteId.toString()}`)
         .set('Authorization', 'Bearer sub0')
         .expect(200);
