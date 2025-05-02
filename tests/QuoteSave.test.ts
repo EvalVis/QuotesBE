@@ -45,8 +45,8 @@ describe('POST /api/quotes/save/:quoteId', () => {
 
     const user = await context.db.collection('Users').findOne({ sub: 'sub0' });
     expect(user).toBeTruthy();
-    expect(user?.savedQuotes).toHaveLength(1);
-    expect(user?.savedQuotes[0].quoteId).toBe(quoteId.toString());
-    expect(user?.savedQuotes[0].dateSaved).toBeTruthy();
+    expect(user!.savedQuotes).toHaveLength(1);
+    expect(user!.savedQuotes[0].quoteId).toBe(quoteId.toString());
+    expect(user!.savedQuotes[0].dateSaved).toBeTruthy();
   });
 });
