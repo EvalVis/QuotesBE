@@ -1,6 +1,8 @@
 import express from 'express';
 import { ObjectId, Db } from 'mongodb';
 import { optionalJwtCheck, jwtCheck } from './jwt';
+import { swaggerUi, specs } from './swagger';
+
 export function createApi({ mongoDb, app }: { mongoDb: Db, app: express.Application }) {
 
     const customClaimsNamespace = process.env.jwt_customClaimsNamespace;
@@ -15,6 +17,59 @@ export function createApi({ mongoDb, app }: { mongoDb: Db, app: express.Applicat
         next(err);
     });
 
+
+    /**
+     * @swagger
+     * /api/quotes/random:
+     *   get:
+     *     summary: Returns random quotes.
+     *     security:
+     *       - bearerAuth: []
+     *     description: |
+     *       Authentication is optional. If you are authenticated
+     *       your already saved quotes will not appear in the list.
+     *       
+     *       Does not include quote's comments, to get them please use /api/quotes/comments/:quoteId.
+     *     responses:
+     *       200:
+     *         description: List of random quotes in json, excluding saved quotes (if logged in) and comments.
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: array
+     *               items:
+     *                 type: object
+     *                 properties:
+     *                   _id:
+     *                     type: string
+     *                     description: Quote's ID - unique.
+     *                   quote:
+     *                     type: string
+     *                     description: The quote.
+     *                   author:
+     *                     type: string
+     *                     description: Quote's author.
+     *                   tags:
+     *                     type: array
+     *                     description: List of tags associated with the quote.
+     *             examples:
+     *               eg1:
+     *                 value:
+     *                   - _id: "680d170c46c456731ba3b858"
+     *                     quote: "The only limit to our realization of tomorrow is our doubts of today."
+     *                     author: "Franklin D. Roosevelt"
+     *                     tags:
+     *                       - inspiration
+     *                       - motivation
+     *                   - _id: "680d170c46c456731ba3b859"
+     *                     quote: "Success is not final, failure is not fatal: It is the courage to continue that counts."
+     *                     author: "Winston Churchill"
+     *                     tags:
+     *                       - success
+     *                       - perseverance
+     *       500:
+     *         description: Server error.
+     */
     app.get('/api/quotes/random', optionalJwtCheck, async (req : express.Request, res : express.Response) : Promise<void> => {
     try {
         const sub = req.auth?.sub;
@@ -186,5 +241,7 @@ export function createApi({ mongoDb, app }: { mongoDb: Db, app: express.Applicat
         res.status(500).send();
     }
     });
+
+    app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
 
 }
