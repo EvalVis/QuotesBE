@@ -41,11 +41,11 @@ export function createApi({ mongoDb, app }: { mongoDb: Db, app: express.Applicat
 
     app.post('/api/quotes/save/:quoteId', jwtCheck, async (req : express.Request, res : express.Response): Promise<void> => {
     try {
-        const sub = req.auth?.sub;
+        const sub = req.auth!.sub;
         const { quoteId } = req.params;
         
-        if (!sub || !quoteId) {
-          res.status(400).json({ message: 'User ID and quoteId are required' });
+        if (!sub) {
+          res.status(400).json({ message: 'User ID is required' });
           return;
         }
         
@@ -68,7 +68,7 @@ export function createApi({ mongoDb, app }: { mongoDb: Db, app: express.Applicat
 
     app.get('/api/quotes/saved', jwtCheck, async (req : express.Request, res : express.Response): Promise<void> => {
     try {
-        const sub = req.auth?.sub;
+        const sub = req.auth!.sub;
         if (!sub) {
           res.status(400).json({ message: 'User ID is required' });
           return;
@@ -100,11 +100,11 @@ export function createApi({ mongoDb, app }: { mongoDb: Db, app: express.Applicat
 
     app.delete('/api/quotes/forget/:quoteId', jwtCheck, async (req : express.Request, res : express.Response): Promise<void> => {
     try {
-        const sub = req.auth?.sub;
+        const sub = req.auth!.sub;
         const { quoteId } = req.params;
         
-        if (!sub || !quoteId) {
-          res.status(400).json({ message: 'User ID and quoteId are required' });
+        if (!sub) {
+          res.status(400).json({ message: 'User ID is required' });
           return;
         }
         
@@ -121,13 +121,13 @@ export function createApi({ mongoDb, app }: { mongoDb: Db, app: express.Applicat
 
     app.post('/api/quotes/addComment/:quoteId', jwtCheck, async (req: express.Request, res: express.Response): Promise<void> => {
     try {
-        const sub = req.auth?.sub;
-        const username = req.auth?.[`${customClaimsNamespace}username`];
+        const sub = req.auth!.sub;
+        const username = req.auth![`${customClaimsNamespace}username`];
         const { quoteId } = req.params;
         const { comment } = req.body;
         
-        if (!sub || !username || !quoteId || !comment) {
-          res.status(400).json({ message: 'User ID, username, quoteId, and comment are required' });
+        if (!sub || !username || !comment) {
+          res.status(400).json({ message: 'User ID, username, and comment are required' });
           return;
         }
         
@@ -157,11 +157,6 @@ export function createApi({ mongoDb, app }: { mongoDb: Db, app: express.Applicat
         const sub = req.auth?.sub;
         const { quoteId } = req.params;
         
-        if (!quoteId) {
-            res.status(400).json({ message: 'quoteId is required' });
-            return;
-        }
-        
         const quote = await quotesCollection.findOne(
         { _id: ObjectId.createFromHexString(quoteId) },
         { projection: { comments: 1 } }
@@ -178,12 +173,12 @@ export function createApi({ mongoDb, app }: { mongoDb: Db, app: express.Applicat
         }
         
         const comments = quote.comments.map((comment: any) => {
-        return {
-            text: comment.text,
-            username: comment.username,
-            isOwner: comment.sub === sub,
-            createdAt: comment.createdAt
-        };
+            return {
+                text: comment.text,
+                username: comment.username,
+                isOwner: sub !== null && comment.sub === sub,
+                createdAt: comment.createdAt
+            };
         });
         
         res.json(comments);
