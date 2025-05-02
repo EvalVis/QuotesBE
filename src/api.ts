@@ -26,7 +26,7 @@ export function createApi({ mongoDb, app }: { mongoDb: Db, app: express.Applicat
      *     security:
      *       - bearerAuth: []
      *     description: |
-     *       Authentication is optional. If you are authenticated
+     *       Auth0 JWT token authentication is optional. If you are authenticated
      *       your already saved quotes will not appear in the list.
      *       
      *       Does not include quote's comments, to get them please use /api/quotes/comments/:quoteId.
@@ -94,6 +94,33 @@ export function createApi({ mongoDb, app }: { mongoDb: Db, app: express.Applicat
     }
     });
 
+        /**
+     * @swagger
+     * /api/quotes/save/{quoteId}:
+     *   post:
+     *     summary: Saves a quote for user.
+     *     security:
+     *       - bearerAuth: []
+     *     description: |
+     *       Auth0 JWT token authentication is mandatory for service to know which user wants the quote saved.
+     *     parameters:
+     *       - in: path
+     *         name: quoteId
+     *         required: true
+     *         description: ID of the quote to save.
+     *         schema:
+     *           type: string
+     *           example: 60b8d295f3a1b2c45f87c4c6
+     *     responses:
+     *       200:
+     *         description: Quote successfully saved.
+     *       400:
+     *         description: User id is not found.
+     *       401:
+     *         description: Unauthorized - No Auth0 JWT token was provided.
+     *       500:
+     *         description: Server error.
+     */
     app.post('/api/quotes/save/:quoteId', jwtCheck, async (req : express.Request, res : express.Response): Promise<void> => {
     try {
         const sub = req.auth!.sub;
