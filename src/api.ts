@@ -94,11 +94,11 @@ export function createApi({ mongoDb, app }: { mongoDb: Db, app: express.Applicat
     }
     });
 
-        /**
+    /**
      * @swagger
      * /api/quotes/save/{quoteId}:
      *   post:
-     *     summary: Saves a quote for user.
+     *     summary: Saves a quote for the authenticated user.
      *     security:
      *       - bearerAuth: []
      *     description: |
@@ -148,6 +148,53 @@ export function createApi({ mongoDb, app }: { mongoDb: Db, app: express.Applicat
     }
     });
 
+    /**
+     * @swagger
+     * /api/quotes/saved:
+     *   get:
+     *     summary: Returns saved quotes for the authenticated user.
+     *     security:
+     *       - bearerAuth: []
+     *     description: |
+     *       Auth0 JWT token authentication is mandatory. Returns all quotes saved by the authenticated user, excluding comments.
+     *     responses:
+     *       200:
+     *         description: List of saved quotes for the authenticateduser.
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: array
+     *               items:
+     *                 type: object
+     *                 properties:
+     *                   _id:
+     *                     type: string
+     *                   quote:
+     *                     type: string
+     *                   author:
+     *                     type: string
+     *                   tags:
+     *                     type: array
+     *                     items:
+     *                       type: string
+     *                   dateSaved:
+     *                     type: string
+     *                     format: date-time
+     *             examples:
+     *               eg1:
+     *                 value:
+     *                   - _id: "680d170c46c456731ba3b858"
+     *                     quote: "The only limit to our realization of tomorrow is our doubts of today."
+     *                     author: "Franklin D. Roosevelt"
+     *                     tags: [inspiration, motivation]
+     *                     dateSaved: "2024-06-07T10:00:00.000Z"
+     *       400:
+     *         description: Bad request - User ID is not found. Should not happen with current Auth0setup.
+     *       401:
+     *         description: Unauthorized - No Auth0 JWT token was provided.
+     *       500:
+     *         description: Server error.
+     */
     app.get('/api/quotes/saved', jwtCheck, async (req : express.Request, res : express.Response): Promise<void> => {
     try {
         const sub = req.auth!.sub;
