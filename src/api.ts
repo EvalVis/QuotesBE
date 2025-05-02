@@ -26,7 +26,7 @@ export function createApi({ mongoDb, app }: { mongoDb: Db, app: express.Applicat
      *     security:
      *       - bearerAuth: []
      *     description: |
-     *       Auth0 JWT token authentication is optional. If you are authenticated
+     *       JWT token authentication is optional. If you are authenticated
      *       your already saved quotes will not appear in the list.
      *       
      *       Does not include quote's comments, to get them please use /api/quotes/comments/:quoteId.
@@ -102,7 +102,7 @@ export function createApi({ mongoDb, app }: { mongoDb: Db, app: express.Applicat
      *     security:
      *       - bearerAuth: []
      *     description: |
-     *       Auth0 JWT token authentication is mandatory for service to know which user wants the quote saved.
+     *       JWT token authentication is mandatory for service to know which user wants the quote saved.
      *     parameters:
      *       - in: path
      *         name: quoteId
@@ -117,7 +117,7 @@ export function createApi({ mongoDb, app }: { mongoDb: Db, app: express.Applicat
      *       400:
      *         description: User id is not found.
      *       401:
-     *         description: Unauthorized - No Auth0 JWT token was provided.
+     *         description: Unauthorized - No JWT token was provided.
      *       500:
      *         description: Server error.
      */
@@ -156,7 +156,9 @@ export function createApi({ mongoDb, app }: { mongoDb: Db, app: express.Applicat
      *     security:
      *       - bearerAuth: []
      *     description: |
-     *       Auth0 JWT token authentication is mandatory. Returns all quotes saved by the authenticated user, excluding comments.
+     *       Returns all quotes saved by the authenticated user, excluding comments.
+     * 
+     *       JWT token authentication is mandatory.
      *     responses:
      *       200:
      *         description: List of saved quotes for the authenticateduser.
@@ -187,11 +189,11 @@ export function createApi({ mongoDb, app }: { mongoDb: Db, app: express.Applicat
      *                     quote: "The only limit to our realization of tomorrow is our doubts of today."
      *                     author: "Franklin D. Roosevelt"
      *                     tags: [inspiration, motivation]
-     *                     dateSaved: "2024-06-07T10:00:00.000Z"
+     *                     dateSaved: "2025-06-07T10:00:00.000Z"
      *       400:
-     *         description: Bad request - User ID is not found. Should not happen with current Auth0setup.
+     *         description: Bad request - User ID is not found.
      *       401:
-     *         description: Unauthorized - No Auth0 JWT token was provided.
+     *         description: Unauthorized - No JWT token was provided.
      *       500:
      *         description: Server error.
      */
@@ -227,6 +229,35 @@ export function createApi({ mongoDb, app }: { mongoDb: Db, app: express.Applicat
     }
     });
 
+    /**
+     * @swagger
+     * /api/quotes/forget/{quoteId}:
+     *   delete:
+     *     summary: Remove a quote from the authenticated user's saved quoteslist.
+     *     security:
+     *       - bearerAuth: []
+     *     description: |
+     *       JWT token authentication is mandatory.
+     * 
+     *       Removes the specified quote from the authenticated user's saved list.
+     *     parameters:
+     *       - in: path
+     *         name: quoteId
+     *         required: true
+     *         description: ID of the quote to remove.
+     *         schema:
+     *           type: string
+     *           example: 60b8d295f3a1b2c45f87c4c6
+     *     responses:
+     *       200:
+     *         description: Quote successfully removed from saved quotes list.
+     *       400:
+     *         description: User ID is not found.
+     *       401:
+     *         description: Unauthorized - No JWT token was provided.
+     *       500:
+     *         description: Server error.
+     */
     app.delete('/api/quotes/forget/:quoteId', jwtCheck, async (req : express.Request, res : express.Response): Promise<void> => {
     try {
         const sub = req.auth!.sub;
@@ -248,6 +279,44 @@ export function createApi({ mongoDb, app }: { mongoDb: Db, app: express.Applicat
     }
     });
 
+    /**
+     * @swagger
+     * /api/quotes/addComment/{quoteId}:
+     *   post:
+     *     summary: Add a comment to a quote.
+     *     security:
+     *       - bearerAuth: []
+     *     description: |
+     *       Adds a comment to the specified quote.
+     *       JWT token authentication is mandatory to display username of commenter. Therefore username must be in JWT token. 
+     *     parameters:
+     *       - in: path
+     *         name: quoteId
+     *         required: true
+     *         description: ID of the quote to comment on.
+     *         schema:
+     *           type: string
+     *           example: 60b8d295f3a1b2c45f87c4c6
+     *     requestBody:
+     *       required: true
+     *       content:
+     *         application/json:
+     *           schema:
+     *             type: object
+     *             properties:
+     *               comment:
+     *                 type: string
+     *                 example: "Excellent quote!"
+     *     responses:
+     *       200:
+     *         description: Comment successfully added.
+     *       400:
+     *         description: User ID, username, or comment is missing.
+     *       401:
+     *         description: Unauthorized - No JWT token was provided.
+     *       500:
+     *         description: Server error.
+     */
     app.post('/api/quotes/addComment/:quoteId', jwtCheck, async (req: express.Request, res: express.Response): Promise<void> => {
     try {
         const sub = req.auth!.sub;
@@ -281,6 +350,63 @@ export function createApi({ mongoDb, app }: { mongoDb: Db, app: express.Applicat
     }
     });
 
+    /**
+     * @swagger
+     * /api/quotes/comments/{quoteId}:
+     *   get:
+     *     summary: Get all quote's comments.
+     *     security:
+     *       - bearerAuth: []
+     *     description: |
+     *       Returns all comments for the specified quote. 
+     * 
+     *       JWT token authentication is optional. If authenticated, the user's comments are marked with isOwner: true. Otherwise isOwner is false.
+     * 
+     *       Returns Bad request if quote by given ID is not found. Returns empty list if quote is found and has no comments.
+     *       
+     *     parameters:
+     *       - in: path
+     *         name: quoteId
+     *         required: true
+     *         description: ID of the quote to get comments for.
+     *         schema:
+     *           type: string
+     *           example: 60b8d295f3a1b2c45f87c4c6
+     *     responses:
+     *       200:
+     *         description: Returns a list of quote's comments.
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: array
+     *               items:
+     *                 type: object
+     *                 properties:
+     *                   text:
+     *                     type: string
+     *                   username:
+     *                     type: string
+     *                   isOwner:
+     *                     type: boolean
+     *                   createdAt:
+     *                     type: string
+     *                     format: date-time
+     *             examples:
+     *               eg1:
+     *                 value:
+     *                   - text: "Excellent quote!"
+     *                     username: "AI"
+     *                     isOwner: false
+     *                     createdAt: "2025-06-07T10:00:00.000Z"
+     *                   - text: "Amazing!"
+     *                     username: "Uncle bob"
+     *                     isOwner: true
+     *                     createdAt: "2026-03-02T12:02:00.000Z"
+     *       404:
+     *         description: Quote not found.
+     *       500:
+     *         description: Server error.
+     */
     app.get('/api/quotes/comments/:quoteId', optionalJwtCheck, async (req: express.Request, res: express.Response): Promise<void> => {
     try {
         const sub = req.auth?.sub;
