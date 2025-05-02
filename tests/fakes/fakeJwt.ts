@@ -1,0 +1,31 @@
+import express from 'express';
+import { jest } from '@jest/globals';
+
+declare global {
+  namespace Express {
+    interface Request {
+      auth?: {
+        [key: string]: any;
+        sub: string;
+      };
+    }
+  }
+}
+
+export const optionalJwtCheck = jest.fn((req: express.Request, _: express.Response, next: express.NextFunction) => {
+  const auth = req.headers.authorization;
+  if (!auth) {
+    return next();
+  }
+  req.auth = { sub: auth.split(' ')[1] };
+  next();
+});
+
+export const jwtCheck = jest.fn((req: express.Request, res: express.Response, next: express.NextFunction) => {
+  const auth = req.headers.authorization;
+  if (!auth) {
+    return res.status(401).json({ message: 'Unauthorized.' });
+  }
+  req.auth = { sub: auth.split(' ')[1] };
+  next();
+});

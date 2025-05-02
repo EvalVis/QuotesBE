@@ -1,41 +1,18 @@
 import express from 'express';
 import { ObjectId, Db } from 'mongodb';
-import { expressjwt as jwt } from 'express-jwt';
-import jwksRsa from 'jwks-rsa';
-import type { Algorithm } from 'jsonwebtoken';
-
+import { optionalJwtCheck, jwtCheck } from './jwt';
 export function createApi({ mongoDb, app }: { mongoDb: Db, app: express.Application }) {
 
     const customClaimsNamespace = process.env.jwt_customClaimsNamespace;
-
-    const optionalJwtCheck = (req : express.Request, res : express.Response, next : express.NextFunction) => {
-        const auth = req.headers.authorization;
-        if (!auth) {
-            return next();
-        }
-        jwtCheck(req, res, next);
-    }
-
-    const jwtCheck = jwt({
-    secret: jwksRsa.expressJwtSecret({
-        cache: process.env.jwt_cache ? process.env.jwt_cache === 'true' : true,
-        rateLimit: process.env.jwt_rateLimit ? process.env.jwt_rateLimit === 'true' : true,
-        jwksRequestsPerMinute: process.env.jwt_jwksRequestsPerMinute ? Number(process.env.jwt_jwksRequestsPerMinute) : 5,
-        jwksUri: process.env.jwt_jwksUri!
-    }),
-    audience: process.env.jwt_audience,
-    issuer: process.env.jwt_issuer,
-    algorithms: process.env.jwt_algorithms? (process.env.jwt_algorithms.split(',') as Algorithm[]) : ['RS256' as Algorithm],
-    });
 
     const quotesCollection = mongoDb.collection(process.env.db_quotesCollectionName!);
     const usersCollection = mongoDb.collection(process.env.db_usersCollectionName!);
 
     app.use((err: any, _ : any, res: any, next: any) => {
-    if (err.name === 'UnauthorizedError') {
-        return res.status(401).json({ message: 'Unauthorized.' });
-    }
-    next(err);
+        if (err.name === 'UnauthorizedError') {
+            return res.status(401).json({ message: 'Unauthorized.' });
+        }
+        next(err);
     });
 
     app.get('/api/quotes/random', optionalJwtCheck, async (req : express.Request, res : express.Response) : Promise<void> => {
@@ -44,10 +21,12 @@ export function createApi({ mongoDb, app }: { mongoDb: Db, app: express.Applicat
 
         let excludedQuoteIds = [];
         if (sub) {
-        const user = await usersCollection.findOne({ sub });
-        if (user && user.savedQuotes) {
-            excludedQuoteIds = user.savedQuotes.map((q: any) => ObjectId.createFromHexString(q.quoteId));
-        }
+            const user = await usersCollection.findOne({ sub });
+            if (user && user.savedQuotes) {
+                console.log("HERE");
+                excludedQuoteIds = user.savedQuotes.map((q: any) => ObjectId.createFromHexString(q.quoteId));
+                console.log("THERE");
+            }
         }
         
         const result = await quotesCollection.aggregate([
