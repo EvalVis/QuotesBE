@@ -22,6 +22,17 @@ describe('GET /api/quotes/saved', () => {
     expect(response.body).toEqual({ message: 'Unauthorized.' });
   });
 
+  it('should not retrieve saved quotes if there are none', async () => {
+    const response = await request(context.app)
+      .get('/api/quotes/saved')
+      .set('Authorization', 'Bearer sub0')
+      .expect(200);
+
+    const savedQuotes = response.body;
+
+    expect(savedQuotes).toHaveLength(0);
+  });
+
   it('should retrieve saved quotes when user is logged in', async () => {
     const quoteId = new ObjectId();
     const dateSaved = new Date().toISOString();
