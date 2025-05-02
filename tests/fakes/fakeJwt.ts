@@ -26,6 +26,7 @@ export const jwtCheck = jest.fn((req: express.Request, res: express.Response, ne
   if (!auth) {
     return res.status(401).json({ message: 'Unauthorized.' });
   }
-  req.auth = { sub: auth.split(' ')[1] };
+  const token = auth.split(' ')[1];
+  req.auth = { sub: token.split(";")[0], [`${process.env.jwt_customClaimsNamespace}username`]: token.split(";")[1] };
   next();
 });

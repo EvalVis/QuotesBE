@@ -14,6 +14,7 @@ process.env.quotes_randomFetchSize = '3';
 process.env.db_name = 'Quotes';
 process.env.db_quotesCollectionName = 'Quotes';
 process.env.db_usersCollectionName = 'Users'; 
+process.env.jwt_customClaimsNamespace = 'https://quotes.programmersdiary.com/';
 
 export interface TestContext {
   db: Db;
