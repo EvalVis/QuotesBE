@@ -106,8 +106,8 @@ Contributions are welcome. To contribute:
 One way to host is to use https://fly.io/:
 1. Sign in to fly.io.
 2. Setup fly cli.
-3. Run fly launch. Dockerfile is generated. You can put env variables there. **Do not include** the secret value of MongoDB URL.
-4. Execute flyctl secrets set MONGODB_ATLAS_QUOTES_URL=Your_secret_mongodb_url.
-5. Execute fly deploy.
+3. Run `fly launch`. Dockerfile is generated. You can put env variables there. **Do not include** the secret value of MongoDB URL.
+4. Execute `flyctl secrets set MONGODB_ATLAS_QUOTES_URL=Your_secret_mongodb_url`.
+5. Execute `fly deploy`.
 
 Already running BE service: https://quotesapi.fly.dev/api/quotes/random.
