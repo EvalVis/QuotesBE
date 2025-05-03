@@ -36,22 +36,30 @@ For project to run, several env variables are needed to be setup.
 
 **`MONGODB_ATLAS_QUOTES_URL`**
 Connection string of MongoDB Atlas for authentication with the database. **Caution**: this is a secret value, do not expose it.
+
 **`jwt_jwksUri`**
 Calling this URL provides public keys to verify JWT token signature.
 
 Format: `https://[your Auth0 domain]/.well-known/jwks.json`.
+
 **`jwt_audience`**
 Value setup in your Auth0 API settings.
+
 **`jwt_issuer`**
 Your Auth0 domain.
+
 **`jwt_customClaimsNamespace`**
 Your custom namespace declared in custom action code of Auth0 Actions -> Triggers -> Post login.
+
 **`db_name`**
 Name of your MongoDB database.
+
 **`db_quotesCollectionName`**
 Name of the collection you will store quotes in.
+
 **`db_usersCollectionName`**
 Name of the collection you will store user saved quotes.
+
 **`quotes_randomFetchSize`**
 Determines how many quotes to fetch in main page.
 
