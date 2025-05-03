@@ -19,3 +19,5 @@ Dockerfile
 fly.toml
 
 dist/
+
+.dockerignore
