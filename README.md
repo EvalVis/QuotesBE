@@ -100,6 +100,7 @@ In database quotes are stored in this format:
 _id: string, quote: string, author: string, tags: list of strings.
 
 Example:
+
 `{"quoteId": 2506, "quote": "Silence is so freaking loud", "author": "Sarah Dessen,", "tags": ["just-listen", "loud", "owen", "sara-dessen", "silence"]}`
 
 
