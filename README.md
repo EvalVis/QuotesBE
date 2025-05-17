@@ -91,8 +91,17 @@ npm run coverage
 
 [![codecov](https://codecov.io/gh/EvalVis/QuotesBE/graph/badge.svg?token=OGRX2HFT69)](https://codecov.io/gh/EvalVis/QuotesBE)
 
-# Resources
+## Resources
 The quotes used in this API are from https://huggingface.co/datasets/Abirate/english_quotes.
+
+## Quotes format
+In database quotes are stored in this format:
+
+_id: string, quote: string, author: string, tags: list of strings.
+
+Example:
+`{"quoteId": 2506, "quote": "Silence is so freaking loud", "author": "Sarah Dessen,", "tags": ["just-listen", "loud", "owen", "sara-dessen", "silence"]}`
+
 
 
 ## Contributing
