@@ -1,7 +1,12 @@
 {
   "name": "quotes",
   "version": "1.0.0",
-  "description": "Backend for retrieving quotes",
+  "description": "Backend for open-source Quotes app for viewing/saving/commenting on quotes",
+  "keywords": [
+    "open-source",
+    "quotes",
+    "api"
+  ],
   "main": "src/index.js",
   "scripts": {
     "build": "tsc",
